@@ -22,13 +22,14 @@ type Server interface {
 }
 
 func main() {
-	//var config tools.Conf
-	//f :=config.Config()
+	var config tools.Conf
+	f :=config.Config()
 
 	//hostAddr := f.Host
-	dir := "/var/log"
+
 	var filelist tools.FileList
-	tools.ListDir(dir, &filelist)
+	tools.ListDir(f.Dir, &filelist)
+	filelist.Relative(f.Dir)
 	fmt.Println(filelist)
 	fmt.Println(len(filelist))
 	//根据类型字段 来启动不同类型的服务

@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 )
 
 
@@ -23,6 +24,20 @@ type File struct {
 
 type FileList []File
 
+//为FileList更新每个文件的RelFile信息
+func (f *FileList)Relative(dir string ) {
+
+	for k, file := range *f {
+		//fmt.Println(file,dir)
+		(*f)[k].RelFile = strings.Replace(file.AbsFile, dir,"",1) //方法一
+		//方法2
+		//file.RelFile = strings.Replace(file.AbsFile, dir,"",1)
+		//(*f)[k] = file
+	}
+
+}
+
+
 //返回文件的md5
 func (f *File)Md5Count(){
 	//var md5str map[string][]byte
@@ -34,11 +49,10 @@ func (f *File)Md5Count(){
 		io.Copy(md5h, file)
 		md51  := md5h.Sum([]byte(""))
 		f.Md5 = fmt.Sprintf("%x",md51)
-		}
 	}
+}
 
 
-//返回所有文件列表,软连会被认为成文件
 func ListDir(dir string,d *FileList) {
 	//var filelist []string
 	files, _ := ioutil.ReadDir(dir)
@@ -52,23 +66,11 @@ func ListDir(dir string,d *FileList) {
 		f.AbsFile = dir+"/"+file.Name()
 		if  F,_ := os.Stat(f.AbsFile) ; ! F.IsDir() {
 			f.Md5Count()
-			f.RelFile = file.Name()
+			//f.RelFile = file.Name()
 			*d = append(*d,f)
 		}
 	}
 }
-
-// 返回相对文件列表
-//func (f FileList)Relative(dir string)[]string{
-//	var relaiveFileList []string/
-//	for _,file :=  range  f {
-//		relaiveFile := strings.Trim(file,dir)
-//		relaiveFileList = append(relaiveFileList, relaiveFile)
-//	}
-//	return relaiveFileList
-
-//}/
-
 type Conf struct{
 	ServerType  string `yaml:"serverType"`
 	Host 		string `yaml:"host"`
