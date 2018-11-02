@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -33,16 +35,18 @@ func AbsFileList(dir string,f *FileList) {
 }
 
 //
-func (f FileList)Relative(dir string)[]string{
-	var relaiveFileList []string
-	for _,file :=  range  f {
-		relaiveFile := strings.Trim(file,dir)
-		relaiveFileList = append(relaiveFileList, relaiveFile)
-	}
-	return relaiveFileList
+//为FileList更新每个文件的RelFile信息
+func (f *File)Relative(dir string ) {
+
+
+		//fmt.Println(file,dir)
+		(*f).RelFile = strings.Replace(f.AbsFile, dir,"",1) //方法一
+		//方法2
+		//file.RelFile = strings.Replace(file.AbsFile, dir,"",1)
+		//(*f)[k] = file
+
 
 }
-
 
 type CompleData struct {
 	S string
@@ -84,13 +88,39 @@ func (p *Pack)DecodeJson(data []byte){
 //	m := Pack{}
 //	m.DecodeJson(data)
 //	fmt.Println(m)
+type File struct {
+
+	AbsFile 	string
+	Md5 		string
+	RelFile 	string
+}
+
+type FileOption interface {
+	Md5Count()
+	Relative(dir string )
+}
+
+
+
+func (f *File)Md5Count(){
+	//var md5str map[string][]byte
+
+	file, inerr := os.Open(f.AbsFile)
+	defer file.Close()
+	if inerr != nil {
+		panic(inerr)
+	}
+	md5h := md5.New()
+	io.Copy(md5h, file)
+	md51  := md5h.Sum([]byte(""))
+	f.Md5 = fmt.Sprintf("%x",md51)
+}
 
 func main() {
-	//var f FileList
-	//AbsFileList("/var/log",&f)
-	data := []byte(`{"PackType":"127.0.0.1","PackData":123}`)
-	m := Pack{}
-	m.DecodeJson(data)
-	fmt.Println(m)
-
+	var f FileOption
+	local := File{"/var/log/messages","",""}
+	f = &local
+	f.Md5Count()
+	f.Relative("/var/log")
+	fmt.Println(f)
 }

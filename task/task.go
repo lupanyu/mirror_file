@@ -1,6 +1,7 @@
-package tools
+package task
 
 import (
+	"bufio"
 	"crypto/md5"
 	"encoding/json"
 	"errors"
@@ -24,6 +25,7 @@ type File struct {
 
 type FileList []File
 
+
 //为FileList更新每个文件的RelFile信息
 func (f *FileList)Relative(dir string ) {
 
@@ -36,7 +38,6 @@ func (f *FileList)Relative(dir string ) {
 	}
 
 }
-
 
 //返回文件的md5
 func (f *File)Md5Count(){
@@ -78,8 +79,8 @@ type Conf struct{
 	Dir 		string `yaml:"dir"`
 }
 //加载配置文件
-func (c *Conf)Config() *Conf{
-	confFile, err := ioutil.ReadFile("conf.yaml")
+func (c *Conf)Config(filename string) *Conf{
+	confFile, err := ioutil.ReadFile(filename)
 	if err != nil{
 		panic(err)
 	}
@@ -95,7 +96,7 @@ type Pack struct {
 	PackType interface{}
 	PackData interface{}
 }
-
+//解析 json形式的包为Pack类型
 func (p *Pack)DecodeJson(data []byte){
 	e := json.Unmarshal(data,p)
 	if e != nil {
@@ -108,8 +109,17 @@ func (p *Pack)DecodeJson(data []byte){
 //	fmt.Println(m)
 
 
-func Connect(){
-
+//返回一个有超时的TCP链接缓冲readwrite
+func Connect(addr string) (*bufio.ReadWriter, error) {
+	// Dial the remote process.
+	// Note that the local port is chosen on the fly. If the local port
+	// must be a specific one, use DialTCP() instead.
+	//fmt.Println("Dial " + addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
 //处理客户端发送的数据
 func Worker(conn net.Conn){
@@ -119,11 +129,11 @@ type Tcp struct {
 
 }
 
-func (*Tcp)Listen(host string)error{
+func Listen(addr string )(net.Conn,error){
 	fmt.Println("listen start")
-	conn, e := net.Listen("tcp", host)
+	conn, e := net.Listen("tcp", addr )
 	if e != nil {
-		return errors.New(e.Error() + "TCP服务无法监听在端口"+host)
+		return nil,errors.New(e.Error() + "TCP服务无法监听在端口"+addr )
 	}
 	fmt.Println("listen ok")
 	for {
@@ -134,6 +144,6 @@ func (*Tcp)Listen(host string)error{
 		}
 		// 开始处理新链接数据
 		//go e.handleMessage(conn)
-		Worker(conn)
+		return conn,nil
 	}
 }
