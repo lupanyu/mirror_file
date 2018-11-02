@@ -100,7 +100,7 @@ type Pack struct {
 func (p *Pack)DecodeJson(data []byte){
 	e := json.Unmarshal(data,p)
 	if e != nil {
-		log.Fatal(e)
+		log.Fatal(e,"in convert []byte to json")
 	}
 }
 ///	data := []byte(`{"PackType":"127.0.0.1","PackData":123}`)

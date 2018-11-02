@@ -39,7 +39,7 @@ func main() {
 		}
 		// a :=task.Pack{PackType:"test",PackData:"testdata"}
 
-		m.WriteString(`{PackType:"test",PackData:"testdata"}`)
+		m.WriteString(`{"PackType":"test","PackData":"testdata"}`)
 		m.Flush()
 	}
 

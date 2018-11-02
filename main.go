@@ -26,27 +26,29 @@ type Server interface {
 
 func main() {
 	var config task.Conf
-	f :=config.Config("conf.yaml")
+	f := config.Config("conf.yaml")
 
-
-	if f.ServerType == "server"{
+	if f.ServerType == "server" {
 		//var run Server
-		con ,e := task.Listen(f.Host)
+		con, e := task.Listen(f.Host)
 		if e != nil {
 			fmt.Println(e.Error())
 		}
-		data := make([]byte,1024)
+		data := make([]byte, 1024)
 		for {
-		n, err2 := con.Read(data)
-		if err2 == io.EOF {
-			fmt.Println("du wan le ")
-			return
+			n, err2 := con.Read(data)
+			if err2 == io.EOF {
+				fmt.Println("du wan le ")
+				return
+			}
+			pack := task.Pack{}
+			pack.DecodeJson(data[:n])
+			fmt.Println(pack)
 		}
-		fmt.Println(n,string(data[:n]))}
-	}
-	if f.ServerType == "client"{
-		var run Client
-		run.Connect(f.Host)
-	}
+		if f.ServerType == "client" {
+			var run Client
+			run.Connect(f.Host)
+		}
 
+	}
 }
