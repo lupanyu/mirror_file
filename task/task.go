@@ -2,6 +2,7 @@ package task
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/json"
 	"errors"
@@ -97,17 +98,34 @@ type Pack struct {
 	PackData interface{}
 }
 //解析 json形式的包为Pack类型
-func (p *Pack)DecodeJson(data []byte){
+func (p *Pack)DecodeJson(data []byte)error{
 	e := json.Unmarshal(data,p)
 	if e != nil {
-		log.Fatal(e,"in convert []byte to json")
+		return e
 	}
+	return nil
 }
 ///	data := []byte(`{"PackType":"127.0.0.1","PackData":123}`)
 //	m := Pack{}
 //	m.DecodeJson(data)
 //	fmt.Println(m)
-
+func SaveFile(conn net.Conn,data []byte,filename string,)error{
+	var buffer bytes.Buffer
+	for {
+		i, err := conn.Read(data)
+		buffer.Write(data[:i])
+		if err != nil {
+			log.Println(err)
+			if err == io.EOF{break}
+		}
+		}
+	fmt.Printf("文件长度是:%v",buffer.Len())
+	file_err := ioutil.WriteFile(filename, buffer.Bytes(), 0644)
+	if file_err != nil {
+		log.Println(file_err)
+	}
+	return nil
+}
 
 //返回一个有超时的TCP链接缓冲readwrite
 func Connect(addr string) (*bufio.ReadWriter, error) {

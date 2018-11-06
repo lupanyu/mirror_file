@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
-	"io"
+	"log"
 	"mirror_file/task"
+	"time"
 )
 
 
@@ -34,21 +36,45 @@ func main() {
 		if e != nil {
 			fmt.Println(e.Error())
 		}
-		data := make([]byte, 1024)
+
+
 		for {
+			time.Sleep(time.Second*10)
+			data := make([]byte, 1024)
 			n, err2 := con.Read(data)
-			if err2 == io.EOF {
-				fmt.Println("du wan le ")
-				return
+			//去掉 []byte中的空位置
+			index := bytes.IndexByte(data, 0)
+			rbyf_pn := data[0:index]
+
+			if err2 != nil  {
+				fmt.Println(err2)
+
 			}
+			if n == 0 {
+				fmt.Println("没有收到数据")
+				continue
+			}
+			fmt.Println("收到了%v个字节",n)
 			pack := task.Pack{}
-			pack.DecodeJson(data[:n])
-			fmt.Println(pack)
+			e := pack.DecodeJson(rbyf_pn)
+			if e != nil {
+				log.Printf("in convert json :%#v",e)
+				continue
+			}
+			if pack.PackType == "file"{
+				//var filename string
+
+				filename := f.Dir + "/" + pack.PackData.(string)
+
+				log.Printf("收到客户端请求 写入文件%v",filename)
+				e := task.SaveFile(con,data,filename)
+				if e != nil {
+					fmt.Printf("写入文件%v失败:%v",filename,e)
+				}
+
+			}
 		}
-		if f.ServerType == "client" {
-			var run Client
-			run.Connect(f.Host)
-		}
+
 
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/gob"
 	"encoding/json"
@@ -100,7 +101,13 @@ type FileOption interface {
 	Relative(dir string )
 }
 
-
+func (p *Pack)BecodeJson(data []byte)error{
+	e := json.Unmarshal(data,p)
+	if e != nil {
+		return e
+	}
+	return nil
+}
 
 func (f *File)Md5Count(){
 	//var md5str map[string][]byte
@@ -117,10 +124,11 @@ func (f *File)Md5Count(){
 }
 
 func main() {
-	var f FileOption
-	local := File{"/var/log/messages","",""}
-	f = &local
-	f.Md5Count()
-	f.Relative("/var/log")
-	fmt.Println(f)
+	//var f FileOption
+	//local := File{"/var/log/messages","",""}
+	var buf bytes.Buffer
+	buf.Write([]byte(`{"PackType":"file","PackData":"testdata"}`))
+	fmt.Println(buf)
+	type pack Pack
+	Pack.BecodeJson(buf)
 }
