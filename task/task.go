@@ -18,7 +18,7 @@ import (
 
 
 type File struct {
-
+	FileName    string
 	AbsFile 	string
 	Md5 		string
 	RelFile 	string
@@ -66,8 +66,10 @@ func ListDir(dir string,d *FileList) {
 		}
 		//fmt.Println(file.Name())
 		f.AbsFile = dir+"/"+file.Name()
+
 		if  F,_ := os.Stat(f.AbsFile) ; ! F.IsDir() {
 			f.Md5Count()
+			f.FileName = file.Name()
 			//f.RelFile = file.Name()
 			*d = append(*d,f)
 		}
@@ -109,6 +111,10 @@ func (p *Pack)DecodeJson(data []byte)error{
 //	m := Pack{}
 //	m.DecodeJson(data)
 //	fmt.Println(m)
+
+
+
+//保存文件
 func SaveFile(conn net.Conn,data []byte,filename string,)error{
 	var buffer bytes.Buffer
 	for {
@@ -126,6 +132,33 @@ func SaveFile(conn net.Conn,data []byte,filename string,)error{
 	}
 	return nil
 }
+
+
+//发送文件
+func SendFile(filename string,m *bufio.ReadWriter,byte_file *[]byte )error{
+	byte_data := make([]byte,1024)
+	data := fmt.Sprintf(`{"PackType":"file","PackData":"%v"}`,filename)
+	copy(byte_data, data)
+	fmt.Println(byte_data)
+	//nn, err := m.WriteString(`{"PackType":"file","PackData":"testdata"}`)
+	nn , err := m.Write(byte_data)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("写入%v字节",nn)
+	m.Flush()
+
+	nn,err =  m.Write(*byte_file)
+	if err != nil {
+		return  err
+	}
+	fmt.Printf("写入%v字节",nn)
+
+	m.Flush()
+	return nil
+}
+
+
 
 //返回一个有超时的TCP链接缓冲readwrite
 func Connect(addr string) (*bufio.ReadWriter, error) {
